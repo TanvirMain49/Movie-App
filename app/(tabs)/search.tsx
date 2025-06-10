@@ -4,27 +4,39 @@ import SearchBar from "@/components/SearchBar";
 import { icons } from "@/constants/icons";
 import { images } from "@/constants/images";
 import { fetchMovies } from "@/services/api";
+import { updateSearchCount } from "@/services/appwrite";
 import { useFetch } from "@/services/useFetch";
 import React, { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, Text, View } from "react-native";
 
 const Search = () => {
-  const [search, setSearch] = useState('');
-  const fetchMoviesFn = useCallback(() => fetchMovies({ query: search }), [search]);
-  const { data: movies, loader, error, refetch:loadMovies, reset } = useFetch(fetchMoviesFn, false);
+  const [search, setSearch] = useState("");
+  const fetchMoviesFn = useCallback(
+    () => fetchMovies({ query: search }),
+    [search]
+  );
+  const {
+    data: movies,
+    loader,
+    error,
+    refetch: loadMovies,
+    reset,
+  } = useFetch(fetchMoviesFn, false);
 
-  useEffect(()=>{
-    const timeoutId=setTimeout(async()=>{
-      if(search.trim()){
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
+      if (search.trim()) {
         await loadMovies();
+        if (movies && movies.length > 0 && search.trim()) {
+          updateSearchCount(search, movies[0]);
+        }
+      } else {
+        reset();
       }
-      else{
-        reset()
-      }
-    }, 500)
-    
-    return ()=> clearTimeout(timeoutId);
-  }, [loadMovies])
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [loadMovies]);
 
   return (
     <View className="flex-1 bg-primary">
@@ -56,28 +68,30 @@ const Search = () => {
             </View>
 
             <View className="my-5">
-              <SearchBar 
-              placeholder="Search movies..." 
-              value={search}
-              onChangeText={(text:string)=>setSearch(text)}
+              <SearchBar
+                placeholder="Search movies..."
+                value={search}
+                onChangeText={(text: string) => setSearch(text)}
               />
             </View>
 
-            {
-              loader && (
-                <ActivityIndicator size="large" color="#0000ff" className="my-3" />
-              )
-            }
+            {loader && (
+              <ActivityIndicator
+                size="large"
+                color="#0000ff"
+                className="my-3"
+              />
+            )}
 
-            {
-              error &&(
-                <Text className="text-red-700 px-5 my-3"> Error:{error.message}</Text>
-              )
-            }
-            {!loader && !error && search.trim() && movies?.length > 0 &&(
+            {error && (
+              <Text className="text-red-700 px-5 my-3">
+                {" "}
+                Error:{error.message}
+              </Text>
+            )}
+            {!loader && !error && search.trim() && movies?.length > 0 && (
               <Text className="text-xl text-white font-bold">
-                Search for {' '}
-                <Text className="text-accent">{search}</Text>
+                Search for <Text className="text-accent">{search}</Text>
               </Text>
             )}
           </>
@@ -86,10 +100,10 @@ const Search = () => {
           !loader && !error ? (
             <View className="mt-10 px-5">
               <Text className="text-gray-500 text-center">
-                {search.trim() ? 'No movie found': 'Search for movie'}
+                {search.trim() ? "No movie found" : "Search for movie"}
               </Text>
             </View>
-          ): null
+          ) : null
         }
       />
     </View>
