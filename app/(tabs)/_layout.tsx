@@ -6,7 +6,6 @@ import { Image, ImageBackground, Text, View } from "react-native";
 
 const TabIcon = ({focused, icon, title}: any) => {
     if(focused){
-
         return (
           <ImageBackground
             source={images.highlight}
